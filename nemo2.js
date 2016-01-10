@@ -4,8 +4,8 @@ var context;
 var mapWidth = 20;
 var mapHeight = 20;
 
-var mapPosX = 20;
-var mapPosY = 20;
+var mapPosX = 0;
+var mapPosY = 0;
 
 var grid = 30;
 var offset = 200;
@@ -29,25 +29,37 @@ function drawMap() {
 
 	context.beginPath();
 	context.lineWidth = 1;
-	for (var i = 0, tmp = 0; i <= mapWidth && tmp <= canvas.width; i++, tmp += grid) {
+	for (var i = 0, tmp = -mapPosX; i <= mapWidth && tmp <= canvas.width; i++, tmp += grid) {
+
+		if (tmp < 0) continue;
+
 		context.moveTo(offset + tmp, offset);
-		context.lineTo(offset + tmp, Math.min(offset + mapHeight*grid, canvas.height));
+		context.lineTo(offset + tmp, Math.min(offset + mapHeight*grid - mapPosY, canvas.height));
 	}
-	for (var i = 0, tmp = 0; i <= mapHeight && tmp <= canvas.height; i++, tmp += grid) {
+	for (var i = 0, tmp = -mapPosY; i <= mapHeight && tmp <= canvas.height; i++, tmp += grid) {
+
+		if (tmp < 0) continue;
+
 		context.moveTo(offset, offset + tmp);
-		context.lineTo(Math.min(offset + mapWidth*grid, canvas.width), offset + tmp);
+		context.lineTo(Math.min(offset + mapWidth*grid - mapPosX, canvas.width), offset + tmp);
 	}
 	context.stroke();
 
 	context.beginPath();
 	context.lineWidth = 3;
-	for (var i = 0, tmp = 0; i <= mapWidth/5 && tmp <= canvas.width; i++, tmp += grid*5) {
+	for (var i = 0, tmp = -mapPosX; i <= mapWidth/5 && tmp <= canvas.width; i++, tmp += grid*5) {
+
+		if (tmp < 0) continue;
+
 		context.moveTo(offset + tmp, offset);
-		context.lineTo(offset + tmp, Math.min(offset + mapHeight*grid, canvas.height));
+		context.lineTo(offset + tmp, Math.min(offset + mapHeight*grid - mapPosY, canvas.height));
 	}
-	for (var i = 0, tmp = 0; i <= mapHeight/5 && tmp <= canvas.height; i++, tmp += grid*5) {
+	for (var i = 0, tmp = -mapPosY; i <= mapHeight/5 && tmp <= canvas.height; i++, tmp += grid*5) {
+
+		if (tmp < 0) continue;
+
 		context.moveTo(offset, offset + tmp);
-		context.lineTo(Math.min(offset + mapWidth*grid, canvas.width), offset + tmp);
+		context.lineTo(Math.min(offset + mapWidth*grid - mapPosX, canvas.width), offset + tmp);
 	}
 	context.stroke();
 }
