@@ -1,82 +1,90 @@
-var wh = 600;
-var grid = 30;
-var offset = 150;
-var ctx;
-var flag; // 어떤 색을 칠 할 건지 체크
+
+
+
+var mapWidth;
+var mapHeight;
 
 
 function init() {
+	
+	var map = [];
 
-	initCanvas();
+	mapWidth=20;
+	mapHeight=20;
+
+	map = initMapArray(mapWidth, mapHeight);
+	/*
+	alert(countWidthBlack(map, 0) + "\n" +
+		countWidthBlack(map, 1) + "\n" +
+		countWidthBlack(map, 2) + "\n" +
+		countWidthBlack(map, 3));
+
+	alert(countHeightBlack(map, 0) + "\n" +
+		countHeightBlack(map, 1) + "\n" +
+		countHeightBlack(map, 2) + "\n" +
+		countHeightBlack(map, 3));
+	*/
 }
 
+function initMapArray(w, h) {
+	var mapArray = [];
 
-function initCanvas() {
-	var canvas=document.getElementById("myCanvas");
-
-	flag = 0;
-	ctx = canvas.getContext("2d");
-
-	ctx.lineWidth = 3;
-	for (var i=0; i<=wh/grid/5; i++) {
-		ctx.moveTo(offset + grid*5*i, offset + 0);
-		ctx.lineTo(offset + grid*5*i, offset + wh);
-		ctx.moveTo(offset + 0, offset + grid*5*i);
-		ctx.lineTo(offset + wh, offset + grid*5*i);
+	for(var i=0; i<h; i++) {
+		var tmp = [];
+		for(var j=0; j<w; j++) {
+			if((i%2 == 0 && j%2 == 0)||(i%2 == 1 && j%2 == 1))
+				tmp.push(1);
+			else
+				tmp.push(0);;
+		}
+		mapArray.push(tmp);
 	}
-	ctx.stroke();
 
-	ctx.lineWidth = 1;
-	for (var i=1; i<=wh/grid; i++) {
-		ctx.moveTo(offset + grid*i, offset + 0);
-		ctx.lineTo(offset + grid*i, offset + wh);
-		ctx.moveTo(offset + 0, offset + grid*i);
-		ctx.lineTo(offset + wh, offset + grid*i);
+	return mapArray;
+}
+
+function countWidthBlack(mapArray, k) {
+	var ret="";
+	var count=0;
+
+	for(var i=0; i<mapWidth; i++) {
+		if(mapArray[k][i] == 0) {
+			if(count == 0)
+				ret+="";
+			else
+				ret+=count+"";
+			count = 0;
+		} else {
+			count += 1;
+		}
 	}
-	ctx.stroke();
 
-	canvas.addEventListener('mousedown', function(event) {
-		var x = event.pageX - offset,
-      	y = event.pageY - offset;
+	if(count != 0) 
+		ret += count;
 
-	    var l = Math.floor(x/grid)*grid;
-	    var t = Math.floor(y/grid)*grid;
 
-      	if (l >= 0 && t >= 0) {
-
-		    ctx.fillRect(offset + l, offset + t, grid, grid);
-
-			canvas.addEventListener('mousemove', mouseMoveHandler, false);
-      	}
-	}, false);
-	canvas.addEventListener('mouseup', function(event) {
-		canvas.removeEventListener('mousemove', mouseMoveHandler);
-	}, false);
+	return ret;
 }
 
-function mouseMoveHandler(event) {
-    var x = event.pageX - offset,
-      	y = event.pageY - offset;
+function countHeightBlack(mapArray, k) {
+	var ret="";
+	var count=0;
 
-    var l = Math.floor(x/grid)*grid;
-    var t = Math.floor(y/grid)*grid;
-
-	if (l >= 0 && t >= 0) {
-		ctx.fillRect(offset + l, offset + t, grid, grid);
+	for(var i=0; i<mapHeight; i++) {
+		if(mapArray[i][k] == 0) {
+			if(count == 0)
+				ret+="";
+			else
+				ret+=count+"";
+			count = 0;
+		} else {
+			count += 1;
+		}
 	}
-}
+
+	if(count != 0)
+		ret += count;
 
 
-function pencilBtnClick(event) {
-	ctx.fillStyle = "#000000";
-	flag = 0;
-}
-
-function eraseBtnClick(event) {
-	ctx.fillStyle = "#FFFFFF";
-	flag = 1;
-}
-
-function removeBtnClick(event) {
-	flag = 2;
+	return ret;
 }
