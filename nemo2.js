@@ -7,6 +7,8 @@ var mapHeight = 20;
 var grid = 30;
 var offset = 200;
 
+var gridSizePending = 0;
+
 //-----------------------------------
 
 var mapCurPosX = 0;
@@ -142,6 +144,14 @@ function removeBtnClick(event) {
 	flag = 3;
 }
 
+function expansionBtnClick(event) {
+	gridSizePending += 30;
+}
+
+function reductionBtnClick(event) {
+	gridSizePending -= 30;
+}
+
 function mouseMoveDragHandler(event) {
 	var x = event.pageX - offset - canvas.offsetLeft,
 		y = event.pageY - offset - canvas.offsetTop;
@@ -179,8 +189,8 @@ function drawTop() {
 
 	context.beginPath();
 	context.lineWidth = 5;
-	context.moveTo(offset, offset);
-	context.lineTo(Math.max(offset, Math.min(offset + mapWidth*grid - mapCurPosX, canvas.width)), offset)
+	context.moveTo(0, offset);
+	context.lineTo(Math.max(offset, Math.min(offset + mapWidth*grid - mapCurPosX, canvas.width)), offset);
 	context.stroke();
 
 	context.font = grid/2 + "px Arial";
@@ -189,17 +199,52 @@ function drawTop() {
 
 		if (tx + grid < -1) continue;
 
-		for (var j = 0, ty = offset; j < mapTopNums[i].length && ty >= 0; j++, ty -= grid) {
+		for (var j = mapTopNums[i].length - 1, ty = offset; j >= 0 && ty >= 0; j--, ty -= grid*3/4) {
 			context.fillText(mapTopNums[i][j], offset + tx + grid/2, ty - grid/4);
 		}
 	}
-
-	context.fillText("test", 10, 50);
 }
 
 function drawLeft() {
 
+	context.beginPath();
+	context.lineWidth = 1;
+	for (var i = 0, tmp = -mapCurPosY; i <= mapHeight && tmp <= canvas.height; i++, tmp += grid) {
 
+		if (tmp < -1) continue;
+
+		context.moveTo(0, offset + tmp);
+		context.lineTo(offset, offset + tmp);
+	}
+	context.stroke();
+
+	context.beginPath();
+	context.lineWidth = 3;
+	for (var i = 0, tmp = -mapCurPosY; i <= mapHeight/5 && tmp <= canvas.height; i++, tmp += grid*5) {
+
+		if (tmp < -1) continue;
+
+		context.moveTo(0, offset + tmp);
+		context.lineTo(offset, offset + tmp);
+	}
+	context.stroke();
+
+	context.beginPath();
+	context.lineWidth = 5;
+	context.moveTo(offset, 0);
+	context.lineTo(offset, Math.max(offset, Math.min(offset + mapHeight*grid - mapCurPosY, canvas.height)));
+	context.stroke();
+
+	context.font = grid/2 + "px Arial";
+
+	for (var i = 0, ty = -mapCurPosY; i < mapHeight && ty <= canvas.height; i++, ty += grid) {
+
+		if (ty + grid < -1) continue;
+
+		for (var j = mapLeftNums[i].length - 1, tx = offset; j >= 0 && tx >= 0; j--, tx -= grid*3/4) {
+			context.fillText(mapLeftNums[i][j], tx - grid/2, offset + ty + grid*3/4);
+		}
+	}
 }
 
 function drawMap() {
@@ -274,12 +319,28 @@ function animate() {
 		}
 	}
 
+	if (gridSizePending != 0)
+	{
+		var tmp;
+
+		if (gridSizePending > 0)
+			tmp = Math.min(1, Math.round(gridSizePending/5));
+		else
+			tmp = Math.max(-1, Math.round(gridSizePending/5));
+
+		grid += tmp;
+		gridSizePending -= tmp;
+
+		if (grid < 15) grid = 15;
+		if (grid > 90) grid = 90;
+	}
+
 	// clear
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	drawTop();
 	drawLeft();
-	context.clearRect(0, 0, offset - 2, offset - 2);
+	context.clearRect(0, 0, offset - 3, offset - 3);
 	drawMap();
 
 	// request new frame
