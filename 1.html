@@ -32,37 +32,7 @@
 
 
   <script> 
-
-    var flag = 0;
-
     init();
-  
-
-    function initMapArray(w, h) {
-      var mapArray= new Array();
-
-      for(int i =0; i<w*h; i++)
-        mapArray.push(0);
-
-      return mapArray;
-    }
-
-    function moveBtnClick(event) {
-      flag = 0;
-    }
-
-    function pencilBtnClick(event) {
-      flag = 1;
-    }
-
-    function eraseBtnClick(event) {
-      flag = 2;
-    }
-
-    function removeBtnClick(event) {
-      flag = 3;
-    }
-
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- 모든 컴파일된 플러그인을 포함합니다 (아래), 원하지 않는다면 필요한 각각의 파일을 포함하세요 -->
