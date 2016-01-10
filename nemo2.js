@@ -4,14 +4,16 @@ var context;
 var mapWidth = 20;
 var mapHeight = 20;
 
+var grid = 30;
+var offset = 200;
+
+//-----------------------------------
+
 var mapCurPosX = 0;
 var mapCurPosY = 0;
 
 var mapPosX = 0;
 var mapPosY = 0;
-
-var grid = 30;
-var offset = 200;
 
 var mouseDownX;
 var mouseDownY;
@@ -20,6 +22,14 @@ var mouseMoveX;
 var mouseMoveY;
 
 var mouseDown = 0;
+
+//------------------------------------
+
+var mapArray;
+var mapTopNums;
+var mapLeftNums;
+
+var flag = 0;
 
 function init() {
 
@@ -32,6 +42,7 @@ function init() {
 
 	canvas = document.getElementById('myCanvas');
 	context = canvas.getContext('2d');
+	context.textAlign="center";
 
 	canvas.addEventListener('mousedown', function(event) {
 		var x = event.pageX - offset - canvas.offsetLeft,
@@ -44,21 +55,91 @@ function init() {
 			mouseDownX = x;
 			mouseDownY = y;
 
-			canvas.addEventListener('mousemove', mouseMoveDragHandler, false);
+			if (flag == 0) {
+				canvas.addEventListener('mousemove', mouseMoveDragHandler, false);
+			}
 		}
 
 	}, false);
 	canvas.addEventListener('mouseup', function(event) {
-		canvas.removeEventListener('mousemove', mouseMoveDragHandler);
+		if (flag == 0) {
+			canvas.removeEventListener('mousemove', mouseMoveDragHandler);
 
-		mouseDown = 0;
+			mouseDown = 0;
 
-		mapPosX = mapCurPosX;
-		mapPosY = mapCurPosY;
+			mapPosX = mapCurPosX;
+			mapPosY = mapCurPosY;
+		}
 
 	}, false);
 
+	mapArray = initMapArray(mapWidth, mapHeight);
+	mapTopNums = initTopNums();
+	mapLeftNums = initLeftNums();
+
 	animate();
+}
+
+function initMapArray(w, h) {
+	var mapArray= new Array();
+
+	for(var i = 0; i < h; i++)
+	{
+		var tmp = [];
+		for (var j = 0; j < w; j++)
+			tmp.push(0);
+		mapArray.push(tmp);
+	}
+
+	return mapArray;
+}
+
+function initTopNums() {
+	var topNums = new Array();
+
+	for (var i = 0; i < mapWidth; i++)
+	{
+		var tmp = [];
+		for (var j = 0; j < i%5; j++)
+			tmp.push(j + 1);
+		if (tmp.length == 0)
+			tmp.push(0);
+		topNums.push(tmp)
+	}
+
+	return topNums;
+}
+
+function initLeftNums() {
+	var leftNums = new Array();
+
+	for (var i = 0; i < mapHeight; i++)
+	{
+		var tmp = [];
+		for (var j = 0; j < i%5; j++)
+			tmp.push(j + 1);
+		if (tmp.length == 0)
+			tmp.push(0);
+		leftNums.push(tmp)
+	}
+
+	return leftNums;
+}
+
+function moveBtnClick(event) {
+	flag = 0;
+}
+
+function pencilBtnClick(event) {
+	flag = 1;
+}
+
+function eraseBtnClick(event) {
+	flag = 2;
+}
+
+function removeBtnClick(event) {
+	flag = 3;
 }
 
 function mouseMoveDragHandler(event) {
@@ -70,6 +151,55 @@ function mouseMoveDragHandler(event) {
 
 	mapCurPosX = mapPosX + mouseDownX - mouseMoveX;
 	mapCurPosY = mapPosY + mouseDownY - mouseMoveY;
+}
+
+function drawTop() {
+
+	context.beginPath();
+	context.lineWidth = 1;
+	for (var i = 0, tmp = -mapCurPosX; i <= mapWidth && tmp <= canvas.width; i++, tmp += grid) {
+
+		if (tmp < -1) continue;
+
+		context.moveTo(offset + tmp, 0);
+		context.lineTo(offset + tmp, offset);
+	}
+	context.stroke();
+
+	context.beginPath();
+	context.lineWidth = 3;
+	for (var i = 0, tmp = -mapCurPosX; i <= mapWidth/5 && tmp <= canvas.width; i++, tmp += grid*5) {
+
+		if (tmp < -1) continue;
+
+		context.moveTo(offset + tmp, 0);
+		context.lineTo(offset + tmp, offset);
+	}
+	context.stroke();
+
+	context.beginPath();
+	context.lineWidth = 5;
+	context.moveTo(offset, offset);
+	context.lineTo(Math.max(offset, Math.min(offset + mapWidth*grid - mapCurPosX, canvas.width)), offset)
+	context.stroke();
+
+	context.font = grid/2 + "px Arial";
+
+	for (var i = 0, tx = -mapCurPosX; i < mapWidth && tx <= canvas.width; i++, tx += grid) {
+
+		if (tx + grid < -1) continue;
+
+		for (var j = 0, ty = offset; j < mapTopNums[i].length && ty >= 0; j++, ty -= grid) {
+			context.fillText(mapTopNums[i][j], offset + tx + grid/2, ty - grid/4);
+		}
+	}
+
+	context.fillText("test", 10, 50);
+}
+
+function drawLeft() {
+
+
 }
 
 function drawMap() {
@@ -147,6 +277,9 @@ function animate() {
 	// clear
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
+	drawTop();
+	drawLeft();
+	context.clearRect(0, 0, offset - 2, offset - 2);
 	drawMap();
 
 	// request new frame
