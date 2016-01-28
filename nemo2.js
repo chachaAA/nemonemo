@@ -181,8 +181,8 @@ var curPosX = -1;
 var curPosY = -1;
 
 function mouseMovePencilHandler(event) {
-	var x = event.pageX - offset - canvas.offsetLeft,
-		y = event.pageY - offset - canvas.offsetTop;
+	var x = event.pageX - offset - canvas.offsetLeft + mapCurPosX,
+		y = event.pageY - offset - canvas.offsetTop + mapCurPosY;
 
 	var posX = parseInt(x/grid);
 	var posY = parseInt(y/grid);
