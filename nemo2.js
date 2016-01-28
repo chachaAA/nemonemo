@@ -48,7 +48,7 @@ function init() {
 
 	canvas.addEventListener('mousedown', function(event) {
 		var x = event.pageX - offset - canvas.offsetLeft,
-		y = event.pageY - offset - canvas.offsetTop;
+			y = event.pageY - offset - canvas.offsetTop;
 
 		mouseDown = 1;
 
@@ -61,7 +61,28 @@ function init() {
 				canvas.addEventListener('mousemove', mouseMoveDragHandler, false);
 			}
 			if (flag == 1) {
+				x += mapCurPosX,
+				y += mapCurPosY;
+
+				var posX = parseInt(x/grid);
+				var posY = parseInt(y/grid);
+
+				firstPosX = curPosX = posX;
+				firstPosY = curPosY = posY;
+
 				canvas.addEventListener('mousemove', mouseMovePencilHandler, false);
+			}
+			if (flag == 2) {
+				x += mapCurPosX,
+				y += mapCurPosY;
+
+				var posX = parseInt(x/grid);
+				var posY = parseInt(y/grid);
+
+				firstPosX = curPosX = posX;
+				firstPosY = curPosY = posY;
+
+				canvas.addEventListener('mousemove', mouseMoveCheckHandler, false);
 			}
 		}
 
@@ -77,6 +98,42 @@ function init() {
 		}
 		if (flag == 1) {
 			canvas.removeEventListener('mousemove', mouseMovePencilHandler);
+
+			var ai = Math.min(firstPosX, curPosX);
+			var bi = Math.max(firstPosX, curPosX);
+			var aj = Math.min(firstPosY, curPosY);
+			var bj = Math.max(firstPosY, curPosY);
+
+			for (var i = ai; i <= bi; i++)
+			{
+				for (var j = aj; j <= bj; j++)
+				{
+					if (mapArray[i][j] == 0)
+						mapArray[i][j] = 1;
+				}
+			}
+
+			firstPosX = -1;
+			firstPosY = -1;
+			curPosX = -1;
+			curPosY = -1;
+		}
+		if (flag == 2) {
+			canvas.removeEventListener('mousemove', mouseMoveCheckHandler);
+
+			var ai = Math.min(firstPosX, curPosX);
+			var bi = Math.max(firstPosX, curPosX);
+			var aj = Math.min(firstPosY, curPosY);
+			var bj = Math.max(firstPosY, curPosY);
+
+			for (var i = ai; i <= bi; i++)
+			{
+				for (var j = aj; j <= bj; j++)
+				{
+					if (mapArray[i][j] == 0)
+						mapArray[i][j] = 2;
+				}
+			}
 
 			firstPosX = -1;
 			firstPosY = -1;
@@ -147,20 +204,22 @@ function pencilBtnClick(event) {
 	flag = 1;
 }
 
-function eraseBtnClick(event) {
+function checkBtnClick(event) {
 	flag = 2;
 }
 
-function removeBtnClick(event) {
+function eraseBtnClick(event) {
 	flag = 3;
 }
 
 function expansionBtnClick(event) {
 	gridSizePending += 30;
+	flag = 0;
 }
 
 function reductionBtnClick(event) {
 	gridSizePending -= 30;
+	flag = 0;
 }
 
 function mouseMoveDragHandler(event) {
@@ -187,11 +246,24 @@ function mouseMovePencilHandler(event) {
 	var posX = parseInt(x/grid);
 	var posY = parseInt(y/grid);
 
-	if (firstPosX < 0 && firstPosY < 0 && posX >= 0 && posY >= 0)
+	if (Math.abs(posX - firstPosX) > Math.abs(posY - firstPosY))
 	{
-		firstPosX = posX;
-		firstPosY = posY;
+		curPosX = posX;
+		curPosY = firstPosY;
 	}
+	else
+	{
+		curPosX = firstPosX;
+		curPosY = posY;
+	}
+}
+
+function mouseMoveCheckHandler(event) {
+	var x = event.pageX - offset - canvas.offsetLeft + mapCurPosX,
+		y = event.pageY - offset - canvas.offsetTop + mapCurPosY;
+
+	var posX = parseInt(x/grid);
+	var posY = parseInt(y/grid);
 
 	if (Math.abs(posX - firstPosX) > Math.abs(posY - firstPosY))
 	{
@@ -203,8 +275,6 @@ function mouseMovePencilHandler(event) {
 		curPosX = firstPosX;
 		curPosY = posY;
 	}
-
-	console.log('x:' + posX + 'y:' + posY);
 }
 
 function drawTop() {
@@ -293,7 +363,6 @@ function drawLeft() {
 
 function drawMap() {
 
-	context.globalAlpha = 0.5;
 	for (var i = 0, ti = -mapCurPosX; i < mapWidth && ti <= canvas.width; i++, ti += grid) {
 
 		if (ti < -grid) continue;
@@ -302,12 +371,43 @@ function drawMap() {
 
 			if (tj < -grid) continue;
 
-			if (i >= Math.min(firstPosX, curPosX) && i <= Math.max(firstPosX, curPosX)
-				&& j >= Math.min(firstPosY, curPosY) && j <= Math.max(firstPosY, curPosY))
+			switch (mapArray[i][j])
+			{
+			case 0:
+				if (i >= Math.min(firstPosX, curPosX) && i <= Math.max(firstPosX, curPosX)
+					&& j >= Math.min(firstPosY, curPosY) && j <= Math.max(firstPosY, curPosY))
+				{
+					context.globalAlpha = 0.5;
+					if (flag == 1) {
+						context.fillRect(offset + ti, offset + tj, grid, grid);
+					}
+					else {
+						context.beginPath();
+						context.lineWidth = 2;
+						context.moveTo(offset + ti, offset + tj);
+						context.lineTo(offset + ti + grid, offset + tj + grid);
+						context.moveTo(offset + ti, offset + tj + grid);
+						context.lineTo(offset + ti + grid, offset + tj);
+						context.stroke();
+					}
+					context.globalAlpha = 1;
+				}
+				break;
+			case 1:
 				context.fillRect(offset + ti, offset + tj, grid, grid);
+				break;
+			case 2:
+				context.beginPath();
+				context.lineWidth = 2;
+				context.moveTo(offset + ti, offset + tj);
+				context.lineTo(offset + ti + grid, offset + tj + grid);
+				context.moveTo(offset + ti, offset + tj + grid);
+				context.lineTo(offset + ti + grid, offset + tj);
+				context.stroke();
+				break;
+			}
 		}
 	}
-	context.globalAlpha = 1;
 
 	context.fillStyle="#FFFFFF";
 	context.fillRect(0, 0, offset, canvas.height);
