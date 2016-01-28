@@ -80,6 +80,8 @@ function init() {
 
 			firstPosX = -1;
 			firstPosY = -1;
+			curPosX = -1;
+			curPosY = -1;
 		}
 
 	}, false);
@@ -182,8 +184,8 @@ function mouseMovePencilHandler(event) {
 	var x = event.pageX - offset - canvas.offsetLeft,
 		y = event.pageY - offset - canvas.offsetTop;
 
-	var posX = x/grid;
-	var posY = y/grid;
+	var posX = parseInt(x/grid);
+	var posY = parseInt(y/grid);
 
 	if (firstPosX < 0 && firstPosY < 0 && posX >= 0 && posY >= 0)
 	{
@@ -191,7 +193,7 @@ function mouseMovePencilHandler(event) {
 		firstPosY = posY;
 	}
 
-	if (Math.abs(curPosX - firstPosX) > Math.abs(curPosY - firstPosY))
+	if (Math.abs(posX - firstPosX) > Math.abs(posY - firstPosY))
 	{
 		curPosX = posX;
 		curPosY = firstPosY;
@@ -202,8 +204,7 @@ function mouseMovePencilHandler(event) {
 		curPosY = posY;
 	}
 
-	console.log(mouseMoveX);
-	console.log(mouseMoveY);
+	console.log('x:' + posX + 'y:' + posY);
 }
 
 function drawTop() {
@@ -301,7 +302,8 @@ function drawMap() {
 
 			if (tj < -grid) continue;
 
-			if ((i + j)%2)
+			if (i >= Math.min(firstPosX, curPosX) && i <= Math.max(firstPosX, curPosX)
+				&& j >= Math.min(firstPosY, curPosY) && j <= Math.max(firstPosY, curPosY))
 				context.fillRect(offset + ti, offset + tj, grid, grid);
 		}
 	}
