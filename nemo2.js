@@ -57,10 +57,10 @@ function init() {
 			mouseDownX = x;
 			mouseDownY = y;
 
-			if (flag == 0) {
-				canvas.addEventListener('mousemove', mouseMoveDragHandler, false);
-			}
-			if (flag == 1) {
+			switch (flag)
+			{
+			case 0: canvas.addEventListener('mousemove', mouseMoveDragHandler, false); break;
+			case 1: case 2: case 3:
 				x += mapCurPosX,
 				y += mapCurPosY;
 
@@ -70,19 +70,7 @@ function init() {
 				firstPosX = curPosX = posX;
 				firstPosY = curPosY = posY;
 
-				canvas.addEventListener('mousemove', mouseMovePencilHandler, false);
-			}
-			if (flag == 2) {
-				x += mapCurPosX,
-				y += mapCurPosY;
-
-				var posX = parseInt(x/grid);
-				var posY = parseInt(y/grid);
-
-				firstPosX = curPosX = posX;
-				firstPosY = curPosY = posY;
-
-				canvas.addEventListener('mousemove', mouseMoveCheckHandler, false);
+				canvas.addEventListener('mousemove', mouseMoveHandler, false);
 			}
 		}
 
@@ -90,26 +78,40 @@ function init() {
 	canvas.addEventListener('mouseup', function(event) {
 		mouseDown = 0;
 
-		if (flag == 0) {
+		switch (flag) {
+		case 0:
 			canvas.removeEventListener('mousemove', mouseMoveDragHandler);
 
 			mapPosX = mapCurPosX;
 			mapPosY = mapCurPosY;
-		}
-		if (flag == 1) {
-			canvas.removeEventListener('mousemove', mouseMovePencilHandler);
+			break;
+		case 1: case 2: case 3:
+			canvas.removeEventListener('mousemove', mouseMoveHandler);
 
 			var ai = Math.min(firstPosX, curPosX);
 			var bi = Math.max(firstPosX, curPosX);
 			var aj = Math.min(firstPosY, curPosY);
 			var bj = Math.max(firstPosY, curPosY);
 
-			for (var i = ai; i <= bi; i++)
+			if (flag == 1 || flag == 2)
 			{
-				for (var j = aj; j <= bj; j++)
+				for (var i = ai; i <= bi; i++)
 				{
-					if (mapArray[i][j] == 0)
-						mapArray[i][j] = 1;
+					for (var j = aj; j <= bj; j++)
+					{
+						if (mapArray[i][j] == 0)
+							mapArray[i][j] = flag;
+					}
+				}
+			}
+			else
+			{
+				for (var i = ai; i <= bi; i++)
+				{
+					for (var j = aj; j <= bj; j++)
+					{
+						mapArray[i][j] = 0;
+					}
 				}
 			}
 
@@ -117,30 +119,8 @@ function init() {
 			firstPosY = -1;
 			curPosX = -1;
 			curPosY = -1;
+			break;
 		}
-		if (flag == 2) {
-			canvas.removeEventListener('mousemove', mouseMoveCheckHandler);
-
-			var ai = Math.min(firstPosX, curPosX);
-			var bi = Math.max(firstPosX, curPosX);
-			var aj = Math.min(firstPosY, curPosY);
-			var bj = Math.max(firstPosY, curPosY);
-
-			for (var i = ai; i <= bi; i++)
-			{
-				for (var j = aj; j <= bj; j++)
-				{
-					if (mapArray[i][j] == 0)
-						mapArray[i][j] = 2;
-				}
-			}
-
-			firstPosX = -1;
-			firstPosY = -1;
-			curPosX = -1;
-			curPosY = -1;
-		}
-
 	}, false);
 
 	mapArray = initMapArray(mapWidth, mapHeight);
@@ -222,6 +202,27 @@ function reductionBtnClick(event) {
 	flag = 0;
 }
 
+function cancelMove() {
+	mouseDown = 0;
+
+	switch (flag) {
+	case 0:
+		canvas.removeEventListener('mousemove', mouseMoveDragHandler);
+
+		mapPosX = mapCurPosX;
+		mapPosY = mapCurPosY;
+		break;
+	case 1: case 2: case 3:
+		canvas.removeEventListener('mousemove', mouseMoveHandler);
+
+		firstPosX = -1;
+		firstPosY = -1;
+		curPosX = -1;
+		curPosY = -1;
+		break;
+	}
+}
+
 function mouseMoveDragHandler(event) {
 	var x = event.pageX - offset - canvas.offsetLeft,
 		y = event.pageY - offset - canvas.offsetTop;
@@ -239,7 +240,7 @@ var firstPosY = -1;
 var curPosX = -1;
 var curPosY = -1;
 
-function mouseMovePencilHandler(event) {
+function mouseMoveHandler(event) {
 	var x = event.pageX - offset - canvas.offsetLeft + mapCurPosX,
 		y = event.pageY - offset - canvas.offsetTop + mapCurPosY;
 
@@ -256,25 +257,7 @@ function mouseMovePencilHandler(event) {
 		curPosX = firstPosX;
 		curPosY = posY;
 	}
-}
 
-function mouseMoveCheckHandler(event) {
-	var x = event.pageX - offset - canvas.offsetLeft + mapCurPosX,
-		y = event.pageY - offset - canvas.offsetTop + mapCurPosY;
-
-	var posX = parseInt(x/grid);
-	var posY = parseInt(y/grid);
-
-	if (Math.abs(posX - firstPosX) > Math.abs(posY - firstPosY))
-	{
-		curPosX = posX;
-		curPosY = firstPosY;
-	}
-	else
-	{
-		curPosX = firstPosX;
-		curPosY = posY;
-	}
 }
 
 function drawTop() {
@@ -377,11 +360,11 @@ function drawMap() {
 				if (i >= Math.min(firstPosX, curPosX) && i <= Math.max(firstPosX, curPosX)
 					&& j >= Math.min(firstPosY, curPosY) && j <= Math.max(firstPosY, curPosY))
 				{
-					context.globalAlpha = 0.5;
+					context.globalAlpha = 0.4;
 					if (flag == 1) {
 						context.fillRect(offset + ti, offset + tj, grid, grid);
 					}
-					else {
+					else if (flag == 2) {
 						context.beginPath();
 						context.lineWidth = 2;
 						context.moveTo(offset + ti, offset + tj);
@@ -390,13 +373,23 @@ function drawMap() {
 						context.lineTo(offset + ti + grid, offset + tj);
 						context.stroke();
 					}
+
 					context.globalAlpha = 1;
 				}
 				break;
 			case 1:
+				if (flag == 3
+					&& i >= Math.min(firstPosX, curPosX) && i <= Math.max(firstPosX, curPosX)
+					&& j >= Math.min(firstPosY, curPosY) && j <= Math.max(firstPosY, curPosY))
+					context.globalAlpha = 0.4;
 				context.fillRect(offset + ti, offset + tj, grid, grid);
+				context.globalAlpha = 1;
 				break;
 			case 2:
+				if (flag == 3
+					&& i >= Math.min(firstPosX, curPosX) && i <= Math.max(firstPosX, curPosX)
+					&& j >= Math.min(firstPosY, curPosY) && j <= Math.max(firstPosY, curPosY))
+					context.globalAlpha = 0.4;
 				context.beginPath();
 				context.lineWidth = 2;
 				context.moveTo(offset + ti, offset + tj);
@@ -404,6 +397,7 @@ function drawMap() {
 				context.moveTo(offset + ti, offset + tj + grid);
 				context.lineTo(offset + ti + grid, offset + tj);
 				context.stroke();
+				context.globalAlpha = 1;
 				break;
 			}
 		}
@@ -414,6 +408,7 @@ function drawMap() {
 	context.fillRect(0, 0, canvas.width, offset);
 	context.fillStyle="#000000";
 
+	context.globalAlpha = 1;
 	context.beginPath();
 	context.lineWidth = 1;
 
