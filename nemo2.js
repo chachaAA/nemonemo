@@ -60,17 +60,26 @@ function init() {
 			if (flag == 0) {
 				canvas.addEventListener('mousemove', mouseMoveDragHandler, false);
 			}
+			if (flag == 1) {
+				canvas.addEventListener('mousemove', mouseMovePencilHandler, false);
+			}
 		}
 
 	}, false);
 	canvas.addEventListener('mouseup', function(event) {
+		mouseDown = 0;
+
 		if (flag == 0) {
 			canvas.removeEventListener('mousemove', mouseMoveDragHandler);
 
-			mouseDown = 0;
-
 			mapPosX = mapCurPosX;
 			mapPosY = mapCurPosY;
+		}
+		if (flag == 1) {
+			canvas.removeEventListener('mousemove', mouseMovePencilHandler);
+
+			firstPosX = -1;
+			firstPosY = -1;
 		}
 
 	}, false);
@@ -163,6 +172,40 @@ function mouseMoveDragHandler(event) {
 	mapCurPosY = mapPosY + mouseDownY - mouseMoveY;
 }
 
+var firstPosX = -1;
+var firstPosY = -1;
+
+var curPosX = -1;
+var curPosY = -1;
+
+function mouseMovePencilHandler(event) {
+	var x = event.pageX - offset - canvas.offsetLeft,
+		y = event.pageY - offset - canvas.offsetTop;
+
+	var posX = x/grid;
+	var posY = y/grid;
+
+	if (firstPosX < 0 && firstPosY < 0 && posX >= 0 && posY >= 0)
+	{
+		firstPosX = posX;
+		firstPosY = posY;
+	}
+
+	if (Math.abs(curPosX - firstPosX) > Math.abs(curPosY - firstPosY))
+	{
+		curPosX = posX;
+		curPosY = firstPosY;
+	}
+	else
+	{
+		curPosX = firstPosX;
+		curPosY = posY;
+	}
+
+	console.log(mouseMoveX);
+	console.log(mouseMoveY);
+}
+
 function drawTop() {
 
 	context.beginPath();
@@ -249,8 +292,29 @@ function drawLeft() {
 
 function drawMap() {
 
+	context.globalAlpha = 0.5;
+	for (var i = 0, ti = -mapCurPosX; i < mapWidth && ti <= canvas.width; i++, ti += grid) {
+
+		if (ti < -grid) continue;
+
+		for (var j = 0, tj = -mapCurPosY; j < mapHeight && tj <= canvas.height; j++, tj += grid) {
+
+			if (tj < -grid) continue;
+
+			if ((i + j)%2)
+				context.fillRect(offset + ti, offset + tj, grid, grid);
+		}
+	}
+	context.globalAlpha = 1;
+
+	context.fillStyle="#FFFFFF";
+	context.fillRect(0, 0, offset, canvas.height);
+	context.fillRect(0, 0, canvas.width, offset);
+	context.fillStyle="#000000";
+
 	context.beginPath();
 	context.lineWidth = 1;
+
 	for (var i = 0, tmp = -mapCurPosX; i <= mapWidth && tmp <= canvas.width; i++, tmp += grid) {
 
 		if (tmp < -1) continue;
@@ -338,10 +402,10 @@ function animate() {
 	// clear
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
+	drawMap();
 	drawTop();
 	drawLeft();
 	context.clearRect(0, 0, offset - 3, offset - 3);
-	drawMap();
 
 	// request new frame
 	requestAnimFrame(function() {
